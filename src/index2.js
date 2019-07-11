@@ -7,11 +7,9 @@ const theatreId = 553;
 function getEverything() {
   fetch('https://evening-plateau-54365.herokuapp.com/theatres' + '/' + theatreId)
     .then(res => res.json())
-    //PESSIMISTICALLY RENDERING
     .then(theater => {
 
       //THIS FUNCTION GETS AN HTML COLLECTION, WHICH WE DON'T WANT, SO WE JUST GET THE FIRST ELEMENT
-      //LEAVE THIS OUTSIDE THE ITERATOR
       const list = document.getElementsByClassName('ui cards showings')[0]
 
       for (const showing of theater.showings) {
@@ -35,29 +33,24 @@ function getEverything() {
 
         const cardDescription = document.createElement('div')
         //GIVE THIS A UNIQUE CLASSNAME TO MANIPULATE LATER ON IN THE ADDEVENTLISTENER
-        //SCREWS UP THE STYLING OF THIS SINCE WE'RE CHANGING THE CLASS NAME :(
-        cardDescription.className = `description-${showing.id}`
+        cardDescription.className = 'description'
+        cardDescription.id = `description-${showing.id}`
         cardDescription.innerText = (showing.capacity - showing.tickets_sold) + ' ' + "remaining tickets"
         cardContent.appendChild(cardDescription)
 
         const cardShowtime = document.createElement('span')
-        cardShowtime.className = 'ui label'
+        cardShowtime.class = 'ui label'
         cardShowtime.innerText = showing.showtime
         cardContent.appendChild(cardShowtime)
 
-        //YOU WANT THIS INSIDE SINCE YOU'RE CALLING THE addEventListener FOR EACH extraContent CONTAINER
         const extraContent = document.createElement('div')
         extraContent.className = 'extra content'
-        //tryna disable this button if there's no more remaining tickets left
-        if (cardDescription.innerText !== "O remaining tickets") {
-          addEventListenerToPost(extraContent)
-        }
+        addEventListenerToPost(extraContent)
         card.appendChild(extraContent)
 
         const buyTicketButton = document.createElement('div')
         buyTicketButton.className = 'ui blue button'
         if (cardDescription.innerText === ("0 remaining tickets")) {
-          //NOT QUITE SURE WHY THIS ISN'T GRAYING OUT WHEN IT BECOMES SOLD OUT
           buyTicketButton.innerText = 'Sold Out'
         } else {
           buyTicketButton.innerText = 'Buy Ticket'
@@ -68,36 +61,36 @@ function getEverything() {
       }
     })
 }
-//SINCE NO DOMCONTENTLOADED, NEED TO INVOKE FIRST FUNCTION
+
 getEverything()
 
 function addEventListenerToPost(extraContent) {
   extraContent.addEventListener('click', function(e){
-  //MAKE SURE THE EVENTLISTENER DOESN'T HAPPEN WHEN YOU CLICK ON THE DIV
-  if (e.target.className === 'ui blue button') {
-    fetch('https://evening-plateau-54365.herokuapp.com/tickets', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json'
-      },
-      body: JSON.stringify({
-        //PARENTELEMENT OF BUTTON IS THE 'UI CARDS SHOWINGS', PARENTELEMENT OF THAT IS 'CARD', CARD WAS GIVEN THE ID OF THE SHOWING
-        showing_id: e.target.parentElement.parentElement.dataset.id
+    if (e.target.className === 'ui blue button') {
+      fetch('https://evening-plateau-54365.herokuapp.com/tickets', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json'
+        },
+        body: JSON.stringify({
+          showing_id: e.target.parentElement.parentElement.dataset.id
+        })
       })
-    })
-    const showingRemainingTickets = document.getElementsByClassName(`description-${e.target.parentElement.parentElement.dataset.id}`)[0].innerText
-    const arrayOfText = showingRemainingTickets.split(' ')
-    let firstElement = --arrayOfText[0]
-    //MAKE SURE NUMBER DOESN'T GO BELOW 0
-    if (firstElement < 0) {
-      firstElement = 0
-    }
-    const pseudoText = document.getElementsByClassName(`description-${e.target.parentElement.parentElement.dataset.id}`)[0].innerText = firstElement + ' ' + 'remaining tickets'
-    if (pseudoText === ("0 remaining tickets")) {
-      e.target.innerText = 'Sold Out'
-    } else {
-      document.getElementsByClassName(`description-${e.target.parentElement.parentElement.dataset.id}`)[0].innerText = firstElement + ' ' + 'remaining tickets'
+      const showingRemainingTickets = document.querySelector(`#description-${e.target.parentElement.parentElement.dataset.id}`)[0].innerText
+      const arrayOfText = showingRemainingTickets.split(' ')
+      let firstElement = --arrayOfText[0]
+
+      //MAKE SURE NUMBER DOESN'T GO BELOW 0
+      if (firstElement < 0) {
+        firstElement = 0
+      }
+
+      const pseudoText = document.querySelector(`#description-${e.target.parentElement.parentElement.dataset.id}`)[0].innerText = firstElement + ' ' + 'remaining tickets'
+      if (pseudoText === ("0 remaining tickets")) {
+        e.target.innerText = 'Sold Out'
+      } else {
+        document.querySelector(`#description-${e.target.parentElement.parentElement.dataset.id}`)[0].innerText = firstElement + ' ' + 'remaining tickets'
       }
     }
   })
